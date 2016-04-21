@@ -162,6 +162,7 @@ OUR_TOOLS := \
     ls \
     lsmod \
     lsof \
+    lsusb \
     md5 \
     mkdir \
     mknod \

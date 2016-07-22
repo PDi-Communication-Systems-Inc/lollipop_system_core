@@ -685,11 +685,12 @@ static int console_init_action(int nargs, char **args)
     if (fd >= 0) {
         const char *msg;
             msg = "\n"
-        "\n"
-        "\n"
-        "\n"
-        "\n"
-        "\n"
+        "***************************************\n"
+        "PDi Communication Systems, Inc.\n"
+        "PDi-TAB(R) 5.0 Android Image\n"
+        "http://www.pdiarm.com\n"
+        "2016\n"
+        "***************************************\n"
         "\n"  // console is 40 cols x 30 lines
         "\n"
         "\n"
@@ -697,8 +698,7 @@ static int console_init_action(int nargs, char **args)
         "\n"
         "\n"
         "\n"
-        "\n"
-        "             A N D R O I D ";
+        "             L E O N I E ! ";
         write(fd, msg, strlen(msg));
         close(fd);
     }

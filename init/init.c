@@ -21,16 +21,21 @@
 #include <fcntl.h>
 #include <ctype.h>
 #include <signal.h>
+#include <netdb.h>
 #include <sys/wait.h>
 #include <sys/mount.h>
 #include <sys/stat.h>
 #include <sys/poll.h>
+#include <netinet/in.h>
 #include <errno.h>
 #include <stdarg.h>
 #include <mtd/mtd-user.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <sys/ioctl.h>
+#include <net/if.h>
+#include <net/if_arp.h>
 
 #include <selinux/selinux.h>
 #include <selinux/label.h>
@@ -70,6 +75,7 @@ static int   bootchart_count;
 static char console[32];
 static char bootmode[32];
 static char hardware[32];
+static char ethernet[32];
 static unsigned revision = 0;
 static char qemu[32];
 
@@ -739,6 +745,23 @@ static void import_kernel_nv(char *name, int for_emulator)
     }
 }
 
+  /* removes all chars from string */
+static char *strip_chars(const char *string, const char *chars)
+{
+  char * newstr = malloc(strlen(string) + 1);
+  int counter = 0;
+ 
+  for ( ; *string; string++) {
+    if (!strchr(chars, *string)) {
+      newstr[ counter ] = *string;
+      ++ counter;
+    }
+  }
+
+  newstr[counter] = 0;
+  return newstr;
+}
+
 static void export_kernel_boot_props(void)
 {
     char tmp[PROP_VALUE_MAX];
@@ -754,6 +777,19 @@ static void export_kernel_boot_props(void)
         { "ro.boot.baseband", "ro.baseband", "unknown", },
         { "ro.boot.bootloader", "ro.bootloader", "unknown", },
     };
+    /* Additions for setting serial number */
+    char *newEthernet = NULL;
+    unsigned macLen;
+    FILE *ethFP;
+
+    struct ifreq ifr;
+    const char *if_name="eth0";
+    size_t if_name_len = strlen(if_name);    
+    int fd=socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
+
+    ERROR("in export_kernel_boot_props(): notice msg\n");
+    NOTICE("in export_kernel_boot_props(): notice msg\n");
+    INFO("in export_kernel_boot_props(): info msg\n");
 
     for (i = 0; i < ARRAY_SIZE(prop_map); i++) {
         ret = property_get(prop_map[i].src_prop, tmp);
@@ -780,6 +816,61 @@ static void export_kernel_boot_props(void)
 
     snprintf(tmp, PROP_VALUE_MAX, "%d", revision);
     property_set("ro.revision", tmp);
+
+    /* Place ethernet mac into serial number for ANDROID_ID */
+    if (if_name_len<sizeof(ifr.ifr_name)) {
+       memcpy(ifr.ifr_name,if_name,if_name_len);
+       ifr.ifr_name[if_name_len]=0;
+    }
+
+    if (ioctl(fd,SIOCGIFHWADDR,&ifr)==-1) {
+       ERROR("Failed to retrieve interface hardware address: %s\n", strerror(errno));
+       close(fd);
+    }
+    close(fd);
+
+    if (ifr.ifr_hwaddr.sa_family!=ARPHRD_ETHER) {
+       ERROR("eth0 is apparently not an ETHERNET MAC address, maybe loopback\n");
+    }
+
+    // display what was captured
+    NOTICE("PDi captured interace information\n");
+    NOTICE("Name: %s\n", ifr.ifr_name); 
+    NOTICE("Index: %d\n", ifr.ifr_ifindex);
+    NOTICE("Flags: %d\n", ifr.ifr_flags);
+    NOTICE("Metric: %d\n", ifr.ifr_metric);
+    NOTICE("MTU: %d\n", ifr.ifr_mtu);
+    NOTICE("Slave: %s\n", ifr.ifr_slave);
+    NOTICE("NewName: %s\n", ifr.ifr_newname);
+    NOTICE("Address: %s\n", ifr.ifr_addr.sa_data);
+
+    const char *mac = (const char*)ifr.ifr_hwaddr.sa_data;
+    strlcpy(ethernet, (const char *)mac, sizeof(ethernet));
+
+    macLen = strlen(mac);
+    if (macLen == 0) {
+       ERROR("No mac address was read\n");
+       ethFP = fopen("/sys/class/net/eth0/address", "r");
+       if (ethFP != NULL) {
+          fread(ethernet, 18, 1, ethFP);
+          newEthernet = strip_chars(ethernet, ":");
+	  newEthernet = strip_chars(newEthernet, "\n");
+          fclose(ethFP);     
+       }
+       else {
+          ERROR("/sys/class/net/eth0/address not available\n");  
+       }
+    }
+    else {
+         INFO("Ethernet MAC length not zero, it is %d", macLen);
+    }
+
+   /* Capture processor id even though its not part of serialno in L 5.0 
+       could have use in a later application */
+    const char *id = get_cpu_serial_number(); 
+    property_set("ro.processorid", id);
+    property_set("ro.serialno", 
+                 (newEthernet != NULL) ? newEthernet : ethernet);
 
     /* TODO: these are obsolete. We should delete them */
     if (!strcmp(bootmode,"factory"))

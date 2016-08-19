@@ -765,7 +765,7 @@ static char *strip_chars(const char *string, const char *chars)
 static void export_kernel_boot_props(void)
 {
     char tmp[PROP_VALUE_MAX];
-    int ret;
+    int ret, bytes_read;
     unsigned i;
     struct {
         const char *src_prop;
@@ -787,7 +787,11 @@ static void export_kernel_boot_props(void)
     size_t if_name_len = strlen(if_name);    
     int fd=socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
 
-    ERROR("in export_kernel_boot_props(): notice msg\n");
+    /* Todo: remove once debugged, mrobbeloth 
+             or set to KLOG_DEFAULT_LEVEL */
+    klog_set_level(7);
+
+    ERROR("in export_kernel_boot_props(): error msg\n");
     NOTICE("in export_kernel_boot_props(): notice msg\n");
     INFO("in export_kernel_boot_props(): info msg\n");
 
@@ -852,9 +856,12 @@ static void export_kernel_boot_props(void)
        ERROR("No mac address was read\n");
        ethFP = fopen("/sys/class/net/eth0/address", "r");
        if (ethFP != NULL) {
-          fread(ethernet, 18, 1, ethFP);
+          bytes_read = fread(ethernet, 18, 1, ethFP);
+          INFO("Read %d bytes\n", bytes_read);
+          INFO("ethernet address is %s\n", ethernet);
           newEthernet = strip_chars(ethernet, ":");
 	  newEthernet = strip_chars(newEthernet, "\n");
+          INFO("modified ethernet address is %s\n", newEthernet);
           fclose(ethFP);     
        }
        else {

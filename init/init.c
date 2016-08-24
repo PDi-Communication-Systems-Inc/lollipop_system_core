@@ -772,7 +772,6 @@ static void export_kernel_boot_props(void)
         const char *dest_prop;
         const char *def_val;
     } prop_map[] = {
-        { "ro.boot.serialno", "ro.serialno", "", },
         { "ro.boot.mode", "ro.bootmode", "unknown", },
         { "ro.boot.baseband", "ro.baseband", "unknown", },
         { "ro.boot.bootloader", "ro.bootloader", "unknown", },
@@ -787,9 +786,7 @@ static void export_kernel_boot_props(void)
     size_t if_name_len = strlen(if_name);    
     int fd=socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
 
-    /* Todo: remove once debugged, mrobbeloth 
-             or set to KLOG_DEFAULT_LEVEL */
-    klog_set_level(7);
+    klog_set_level(KLOG_DEFAULT_LEVEL);
 
     ERROR("in export_kernel_boot_props(): error msg\n");
     NOTICE("in export_kernel_boot_props(): notice msg\n");
@@ -876,8 +873,8 @@ static void export_kernel_boot_props(void)
        could have use in a later application */
     const char *id = get_cpu_serial_number(); 
     property_set("ro.processorid", id);
-    property_set("ro.serialno", 
-                 (newEthernet != NULL) ? newEthernet : ethernet);
+    ret = property_set("ro.serialno", 
+             (newEthernet != NULL) ? newEthernet : ethernet);
 
     /* TODO: these are obsolete. We should delete them */
     if (!strcmp(bootmode,"factory"))

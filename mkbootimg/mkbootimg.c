@@ -37,19 +37,23 @@ static void *load_file(const char *fn, unsigned *_sz)
 
     sz = lseek(fd, 0, SEEK_END);
     if(sz < 0) goto oops;
+    else fprintf(stdout, "load_file was successful on %s with sz=%d\n", fn, sz);
 
     if(lseek(fd, 0, SEEK_SET) != 0) goto oops;
 
     data = (char*) malloc(sz);
     if(data == 0) goto oops;
+    else fprintf(stdout, "load_file was successful on %s with data=%d\n", fn, sizeof(data));
 
     if(read(fd, data, sz) != sz) goto oops;
+    else fprintf(stdout, "loadfile was successful reading %s\n", fn);
     close(fd);
 
     if(_sz) *_sz = sz;
     return data;
 
 oops:
+    fprintf(stderr, "load_file (oops): could not find EOF, allocate memory, or read %s\n", fn);
     close(fd);
     if(data != 0) free(data);
     return 0;
@@ -131,26 +135,37 @@ int main(int argc, char **argv)
         argv += 2;
         if(!strcmp(arg, "--output") || !strcmp(arg, "-o")) {
             bootimg = val;
+	    fprintf(stdout, "main(): output filename is %s\n", bootimg);
         } else if(!strcmp(arg, "--kernel")) {
             kernel_fn = val;
+            fprintf(stdout, "main(): kernel filename is %s\n", kernel_fn);
         } else if(!strcmp(arg, "--ramdisk")) {
             ramdisk_fn = val;
+            fprintf(stdout, "main(): ramdisk filename is %s\n", ramdisk_fn);
         } else if(!strcmp(arg, "--second")) {
             second_fn = val;
+            fprintf(stdout, "main(): secondary filename is %s\n", second_fn);
         } else if(!strcmp(arg, "--cmdline")) {
             cmdline = val;
+            fprintf(stdout, "main(): cmdline to be added is %s\n", cmdline);
         } else if(!strcmp(arg, "--base")) {
             base = strtoul(val, 0, 16);
+	    fprintf(stdout, "main(): base offset is 0x%x\n", base);
         } else if(!strcmp(arg, "--kernel_offset")) {
             kernel_offset = strtoul(val, 0, 16);
+	    fprintf(stdout, "main(): kernel offset is 0x%x\n", base);
         } else if(!strcmp(arg, "--ramdisk_offset")) {
             ramdisk_offset = strtoul(val, 0, 16);
+	    fprintf(stdout, "main(): ramdisk offset is 0x%x\n", base);
         } else if(!strcmp(arg, "--second_offset")) {
             second_offset = strtoul(val, 0, 16);
+	    fprintf(stdout, "main(): secondary offset is 0x%x\n", base);
         } else if(!strcmp(arg, "--tags_offset")) {
             tags_offset = strtoul(val, 0, 16);
+	    fprintf(stdout, "main(): tags offset is 0x%x\n", base);
         } else if(!strcmp(arg, "--board")) {
             board = val;
+	    fprintf(stdout, "main(): board name is %s\n", board);
         } else if(!strcmp(arg,"--pagesize")) {
             pagesize = strtoul(val, 0, 10);
             if ((pagesize != 2048) && (pagesize != 4096)
@@ -158,6 +173,7 @@ int main(int argc, char **argv)
                 fprintf(stderr,"error: unsupported page size %d\n", pagesize);
                 return -1;
             }
+	    fprintf(stdout, "main(): standard pagesize %d specified\n", pagesize);
         } else {
             return usage();
         }
@@ -230,6 +246,9 @@ int main(int argc, char **argv)
             fprintf(stderr,"error: could not load secondstage '%s'\n", second_fn);
             return 1;
         }
+        else {
+	    fprintf(stdout, "main(): second_data has size %d\n", hdr.second_size);
+        }
     }
 
     /* put a hash of the contents in the header so boot images can be
@@ -241,7 +260,9 @@ int main(int argc, char **argv)
     SHA_update(&ctx, ramdisk_data, hdr.ramdisk_size);
     SHA_update(&ctx, &hdr.ramdisk_size, sizeof(hdr.ramdisk_size));
     SHA_update(&ctx, second_data, hdr.second_size);
+    fprintf(stdout, "main(): Before SHA_update call, hdr.second_size=%d\n", hdr.second_size);
     SHA_update(&ctx, &hdr.second_size, sizeof(hdr.second_size));
+    fprintf(stdout, "main(): After SHA_update call, hdr.second_size=%d\n", hdr.second_size);
     sha = SHA_final(&ctx);
     memcpy(hdr.id, sha,
            SHA_DIGEST_SIZE > sizeof(hdr.id) ? sizeof(hdr.id) : SHA_DIGEST_SIZE);
@@ -262,8 +283,16 @@ int main(int argc, char **argv)
     if(write_padding(fd, pagesize, hdr.ramdisk_size)) goto fail;
 
     if(second_data) {
+	fprintf(stdout, "main(): Writing device tree to boot image\n");
         if(write(fd, second_data, hdr.second_size) != (ssize_t) hdr.second_size) goto fail;
+        else fprintf(stdout, "main(): Wrote the device tree binary of size %d into the boot image\n", 
+                     hdr.second_size);
         if(write_padding(fd, pagesize, hdr.second_size)) goto fail;
+        else fprintf(stdout, "main(): Padded the device tree binary in the boot image\n");
+        fprintf(stdout, "main(): hdr.second_size at end of main is %d\n", hdr.second_size);
+    }
+    else {
+        fprintf(stderr, "main(): no secondary image data to work with\n");
     }
 
     return 0;

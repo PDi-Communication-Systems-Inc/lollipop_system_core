@@ -273,12 +273,6 @@ static const struct fs_path_config android_files[] = {
     { 00744, AID_ROOT,      AID_ROOT,      0, "system/etc/otasetup.sh"},
     { 00744, AID_ROOT,      AID_ROOT,      0, "system/etc/load_wifi_module.sh"},
     { 00744, AID_ROOT,      AID_ROOT,      0, "system/etc/copy_device_policies.sh" },
-
-    /* serial port modifications */
-    { 00660, AID_ROOT,      AID_SYSTEM,    0, "dev/ttymxc0"},
-    { 00660, AID_ROOT,      AID_SYSTEM,    0, "dev/ttymxc1"},
-    { 00660, AID_ROOT,      AID_SYSTEM,    0, "dev/ttymxc3"},
-
     { 00644, AID_ROOT,      AID_ROOT,      0, 0 },
 };
 

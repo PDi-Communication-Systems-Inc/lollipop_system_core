@@ -359,7 +359,7 @@ static void cmd_download(struct protocol_handle *phandle, const char *arg)
     unsigned len = strtoul(arg, NULL, 16);
     int old_fd;
 
-    if (len > 256 * 1024 * 1024) {
+    if (len > 2048 * 1024 * 1024) {
         fastboot_fail(phandle, "data too large");
         return;
     }

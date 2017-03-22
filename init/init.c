@@ -695,7 +695,7 @@ static int console_init_action(int nargs, char **args)
         "PDi Communication Systems, Inc.\n"
         "PDi-TAB(R) 5.0 Android Image\n"
         "http://www.pdiarm.com\n"
-        "2016\n"
+        "2017\n"
         "***************************************\n"
         "\n"  // console is 40 cols x 30 lines
         "\n"

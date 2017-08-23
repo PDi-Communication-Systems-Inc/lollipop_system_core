@@ -69,7 +69,7 @@ static int settime_rtc_tm(struct tm *tm) {
     rtc.tm_yday = tm->tm_yday;
     rtc.tm_isdst = tm->tm_isdst;
 
-    ret = ioctl(fd, RTC_SET_TIME, rtc);
+    ret = ioctl(fd, RTC_SET_TIME, &rtc);
 done:
     close(fd);
     return ret;

@@ -703,8 +703,7 @@ static int console_init_action(int nargs, char **args)
         "\n"
         "\n"
         "\n"
-        "\n"
-        "             L E O N I E ! ";
+        "\n";
         write(fd, msg, strlen(msg));
         close(fd);
     }

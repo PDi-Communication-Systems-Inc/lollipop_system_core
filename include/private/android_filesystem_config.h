@@ -270,6 +270,7 @@ static const struct fs_path_config android_files[] = {
     { 00640, AID_ROOT,      AID_SHELL,     0, "fstab.*" },
     { 00744, AID_ROOT,      AID_ROOT,      0, "system/etc/process_ts.sh"},
     { 00744, AID_ROOT,      AID_ROOT,      0, "system/etc/process_cmdline.sh"},
+    { 00744, AID_ROOT,      AID_ROOT,      0, "system/etc/wake_lock.sh"},
     { 00744, AID_ROOT,      AID_ROOT,      0, "system/etc/otasetup.sh"},
     { 00744, AID_ROOT,      AID_ROOT,      0, "system/etc/load_wifi_module.sh"},
     { 00744, AID_ROOT,      AID_ROOT,      0, "system/etc/copy_device_policies.sh" },

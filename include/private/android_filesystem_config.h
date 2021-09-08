@@ -275,7 +275,6 @@ static const struct fs_path_config android_files[] = {
     { 00744, AID_ROOT,      AID_ROOT,      0, "system/etc/load_wifi_module.sh"},
     { 00744, AID_ROOT,      AID_ROOT,      0, "system/etc/copy_device_policies.sh" },
     { 00744, AID_ROOT,      AID_ROOT,      0, "system/etc/pdi_install_apk.sh" },
-    { 00744, AID_ROOT,      AID_ROOT,      0, "system/etc/pdi_eth_flow_on.sh" },
     { 00644, AID_ROOT,      AID_ROOT,      0, 0 },
 };
 
